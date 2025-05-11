@@ -1,6 +1,13 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 
+type InlineDataPart = {
+  inlineData?: {
+    data: string;
+  };
+  text?: string;
+};
+
 export async function POST(req: NextRequest) {
   try {
     const { prompt } = await req.json();
@@ -17,12 +24,19 @@ export async function POST(req: NextRequest) {
 
     const parts = result?.candidates?.[0]?.content?.parts ?? [];
 
-    const imagePart = parts.find((part: any) => part.inlineData);
+    const imagePart = (parts as InlineDataPart[]).find(
+      (part) => part.inlineData && part.inlineData.data
+    );
+
     const imageBase64 = imagePart?.inlineData?.data ?? "";
 
     return NextResponse.json({ image: `data:image/png;base64,${imageBase64}` });
   } catch (err: unknown) {
-    console.error("Error generating image:", err);
-    return NextResponse.json({ error: "Failed to generate image" }, { status: 500 });
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error("Unknown error", err);
+    }
+    return new Response("Something went wrong", { status: 500 });
   }
 }
