@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const imageBase64 = imagePart?.inlineData?.data ?? "";
 
     return NextResponse.json({ image: `data:image/png;base64,${imageBase64}` });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("Error generating image:", err);
     return NextResponse.json({ error: "Failed to generate image" }, { status: 500 });
   }
